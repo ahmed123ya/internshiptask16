@@ -2,40 +2,72 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Sentiment Chatbot</title>
- <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sentie - Sentiment Chatbot</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
   <div class="chat-container">
-    <h2>🤖 Chatbot</h2>
-    <div id="chat-box"></div>
-    <form id="chat-form">
-      <input type="text" id="user-input" placeholder="Type a message..." required />
-      <button type="submit">Send</button>
-    </form>
+    <h2>🤖 Sentie - Your Sentiment-Savvy Assistant</h2>
+
+    <div class="chat-box" id="chat-box">
+      <!-- Messages appear here -->
+    </div>
+
+    <div class="controls">
+      <select id="modelSelect">
+        <option value="vader">VADER (default)</option>
+        <option value="textblob">TextBlob</option>
+      </select>
+      <input type="text" id="user-input" placeholder="Type your message..." autocomplete="off">
+      <button onclick="sendMessage()">Send</button>
+    </div>
   </div>
 
   <script>
-    const form = document.getElementById('chat-form');
-    const input = document.getElementById('user-input');
-    const chatBox = document.getElementById('chat-box');
+    // Load greeting when page loads
+    window.onload = async () => {
+      const res = await fetch("/get_greeting");
+      const data = await res.json();
+      addMessage("bot", data.reply, data.sentiment);
+    };
 
-    form.onsubmit = async (e) => {
-      e.preventDefault();
-      const userText = input.value;
-      chatBox.innerHTML += `<p><strong>You:</strong> ${userText}</p>`;
+    function addMessage(sender, text, sentiment = "") {
+      const chatBox = document.getElementById("chat-box");
+      const message = document.createElement("div");
+      message.classList.add("message", sender);
+      message.innerHTML = `<p>${text}</p>` + (sentiment ? `<span class="sentiment">Detected sentiment: ${sentiment}</span>` : "");
+      chatBox.appendChild(message);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById("user-input");
+      const text = input.value.trim();
+      const model = document.getElementById("modelSelect").value;
+
+      if (!text) return;
+
+      addMessage("user", text);
       input.value = "";
 
-      const res = await fetch('/get', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `message=${encodeURIComponent(userText)}`
+      // Show typing...
+      const typing = document.createElement("div");
+      typing.classList.add("message", "bot", "typing");
+      typing.innerHTML = `<p><em>Sentie is typing...</em></p>`;
+      document.getElementById("chat-box").appendChild(typing);
+
+      const response = await fetch("/get_response", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, model })
       });
-      const data = await res.json();
-      chatBox.innerHTML += `<p><strong>Bot:</strong> ${data.response} <br><em>Detected sentiment: ${data.sentiment}</em></p>`;
-      chatBox.scrollTop = chatBox.scrollHeight;
-    };
+
+      const data = await response.json();
+
+      typing.remove(); // Remove typing indicator
+      addMessage("bot", data.reply, data.sentiment);
+    }
   </script>
 </body>
 </html>

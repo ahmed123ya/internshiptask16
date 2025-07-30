@@ -8,11 +8,13 @@ This is a simple sentiment-aware chatbot built with **Python**, **Flask**, and *
 
 ##  Features
 
-- Real-time chat interface with AJAX (no page refresh)
-- Sentiment detection (Positive, Negative, Neutral)
-- Dynamic replies based on detected sentiment
-- Chat bubbles and fade-in animations
-- Lightweight and beginner-friendly NLP with TextBlob
+- Real-time chat with AJAX (no page reload)
+- Sentiment analysis using **VADER** (default) or **TextBlob**
+- Custom replies for each sentiment
+- Chat bubbles for both user and bot
+- Typing animation for Sentie
+- Initial greeting on page load
+- Clean UI with optional model selection
 
 ---
 
@@ -37,7 +39,7 @@ cd internshiptask16
 
 pip install -r requirements.txt
 python -m textblob.download_corpora
-
+pip install flask textblob vaderSentiment
 ## Run the Flask App:
 
 python app.py
